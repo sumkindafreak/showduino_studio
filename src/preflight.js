@@ -1,3 +1,5 @@
+import { validatePixelComposition } from './pixels.js';
+
 export function runPreflight(production) {
   const issues = [];
   if (!production.name?.trim()) issues.push({ level: 'error', text: 'Production has no name.' });
@@ -11,10 +13,11 @@ export function runPreflight(production) {
       cue.actions.forEach(action => {
         if (!action.target?.trim()) issues.push({ level: 'error', text: `${cue.name} → ${action.label} has no target.` });
         if (!action.label?.trim()) issues.push({ level: 'warn', text: `${cue.name} contains an unnamed ${action.type} action.` });
+        if (action.type === 'pixel') issues.push(...validatePixelComposition(action));
       });
     });
   });
 
-  if (!issues.length) issues.push({ level: 'ok', text: 'Production structure is valid for Studio 2.0 simulation.' });
+  if (!issues.length) issues.push({ level: 'ok', text: 'Production structure and segmented pixel compositions are valid for Studio 2.0 simulation.' });
   return issues;
 }
