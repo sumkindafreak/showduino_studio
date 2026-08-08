@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1014" />
+  <title>Showduino Studio</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <button class="icon-button mobile-only" id="libraryToggle" aria-label="Toggle clip library">☰</button>
+        <div class="brand-mark">S</div>
+        <div>
+          <div class="brand-name">Showduino Studio</div>
+          <input id="projectName" class="project-name" value="Untitled Production" aria-label="Project name" />
+        </div>
+      </div>
+
+      <div class="transport" role="toolbar" aria-label="Transport controls">
+        <button class="transport-btn" id="rewindBtn" title="Rewind">↤</button>
+        <button class="transport-btn primary" id="playBtn" title="Play">▶</button>
+        <button class="transport-btn" id="pauseBtn" title="Pause">Ⅱ</button>
+        <button class="transport-btn" id="stopBtn" title="Stop">■</button>
+        <div class="timecode" id="timecode">00:00.000</div>
+      </div>
+
+      <div class="toolbar" role="toolbar" aria-label="Project controls">
+        <button class="tool-button" id="newBtn">New</button>
+        <button class="tool-button" id="demoBtn">Demo</button>
+        <button class="tool-button" id="saveBtn">Save</button>
+        <button class="tool-button" id="loadBtn">Load</button>
+        <span class="toolbar-divider"></span>
+        <button class="icon-button" id="undoBtn" title="Undo">↶</button>
+        <button class="icon-button" id="redoBtn" title="Redo">↷</button>
+        <span class="toolbar-divider"></span>
+        <button class="icon-button" id="zoomOutBtn" title="Zoom out">−</button>
+        <button class="zoom-readout" id="zoomReadout">100%</button>
+        <button class="icon-button" id="zoomInBtn" title="Zoom in">+</button>
+        <button class="tool-button" id="fitBtn">Fit</button>
+      </div>
+    </header>
+
+    <main class="main-layout">
+      <aside class="library-panel" id="libraryPanel">
+        <div class="panel-heading">
+          <div>
+            <h2>Show Tools</h2>
+            <p>Drag clips onto any compatible lane</p>
+          </div>
+          <button class="icon-button mobile-only" id="libraryClose" aria-label="Close clip library">×</button>
+        </div>
+        <input id="librarySearch" class="library-search" type="search" placeholder="Search audio, lighting, cue…" />
+        <div id="libraryContent" class="library-content"></div>
+        <div class="library-divider"></div>
+        <button class="add-track-btn" id="addTrackBtn">+ Add track</button>
+      </aside>
+
+      <section class="workspace-wrap">
+        <div class="workspace-status">
+          <div class="mode-pill">STUDIO</div>
+          <span id="statusText">Ready</span>
+          <div class="status-spacer"></div>
+          <label class="compact-control"><input id="snapToggle" type="checkbox" checked /> Snap</label>
+          <select id="snapSize" class="status-select" aria-label="Snap size">
+            <option value="0.1">100 ms</option>
+            <option value="0.25">250 ms</option>
+            <option value="0.5">500 ms</option>
+            <option value="1" selected>1 sec</option>
+          </select>
+          <span id="clipCount">0 clips</span>
+        </div>
+
+        <div class="timeline-shell">
+          <div class="timeline-header-row">
+            <div class="track-header timeline-corner">
+              <span>Tracks</span>
+              <button class="tiny-btn" id="collapseAllBtn" title="Collapse all tracks">−</button>
+            </div>
+            <div class="ruler-viewport" id="rulerViewport">
+              <div class="ruler" id="ruler"></div>
+            </div>
+          </div>
+
+          <div class="timeline-body" id="timelineBody">
+            <div class="track-headers" id="trackHeaders"></div>
+            <div class="timeline-viewport" id="timelineViewport" tabindex="0" aria-label="Show timeline">
+              <div class="timeline-canvas" id="timelineCanvas">
+                <div class="grid-layer" id="gridLayer"></div>
+                <div class="lanes" id="lanes"></div>
+                <div class="playhead" id="playhead"><div class="playhead-head"></div></div>
+                <div class="drop-indicator" id="dropIndicator" hidden></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="inspector-panel" id="inspectorPanel" aria-hidden="true">
+        <div class="panel-heading">
+          <div>
+            <h2 id="inspectorTitle">Clip Inspector</h2>
+            <p id="inspectorSubtitle">Edit the selected clip</p>
+          </div>
+          <button class="icon-button" id="inspectorClose" aria-label="Close inspector">×</button>
+        </div>
+        <div id="inspectorContent" class="inspector-content"></div>
+      </aside>
+    </main>
+
+    <footer class="footerbar">
+      <span>Drag clips between lanes · drag edges to resize · click timeline to scrub · wheel/pinch to zoom</span>
+      <span>Ctrl/Cmd+Z undo · Ctrl/Cmd+D duplicate · Delete remove · Space play/pause</span>
+    </footer>
+  </div>
+
+  <div class="clip-menu" id="clipMenu" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+  <script src="touch.js"></script>
+</body>
+</html>
