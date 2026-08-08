@@ -1,41 +1,63 @@
-# Showduino Studio
+# Showduino Studio 2.0
 
-A standalone browser-based production editor for designing immersive Showduino shows.
+Showduino Studio is the production-authoring environment for building immersive events for the Showduino system.
 
-## Current build
+## Studio 2.0 direction
 
-The first Studio build uses the same lightweight standalone approach as Drumit: plain HTML, CSS and JavaScript with no build step.
+Studio is no longer modelled as a generic DAW timeline. Its core production model is:
 
-### Included
+**Production → Scene → Cue → Action → Target**
 
-- Multi-lane DAW-style show timeline
-- Drag clips horizontally and vertically between tracks
-- Resize clips from either edge
-- Audio, video, lighting, DMX, pixels, relay, automation, cue and safety clip types
-- Clip inspector hidden behind the `⋮` menu
-- Add/remove tracks
-- Play, pause, stop, rewind and timeline scrubbing
-- Snap controls
-- Mouse-wheel / Ctrl-wheel zoom
-- Two-finger pinch zoom on touchscreens
-- Touch dragging from the clip library
-- Undo / redo
-- Duplicate, split, move-to-playhead and delete actions
+A production contains scenes. Scenes contain operator or event cues. Each cue can execute multiple Showduino actions across different systems at the same moment.
+
+## Current milestone — Production Foundation
+
+This branch introduces the first Studio 2.0 foundation:
+
+- Production workspace instead of a generic multi-track editor
+- Scene navigator
+- Cue list and Cue Composer
+- Multi-action cues
+- Audio, lighting, pixels, DMX, relay, video, delay, automation, trigger and safety action types
+- Explicit Showduino targets
+- Create/edit scenes, cues and actions
 - Browser local save/load
-- Responsive mobile/tablet layout
-- Demo production
+- Structural preflight checks
+- Cue and scene simulation preview
+- The Chamber reference production
+- Responsive browser UI
 
-## Run locally
+## Reference production
 
-No dependencies are required.
+`The Chamber` is used as the development reference. The included `Entity Appears` cue demonstrates a single cue coordinating:
 
-### Option 1 — open directly
+1. entity scream audio
+2. chamber lighting snap to red
+3. corridor pixel chase
+4. relay-driven prop strike
+5. timed delay
+6. impact audio
 
-Open `index.html` in a modern browser.
+This is the behaviour Studio 2.0 is designed around: one production intent coordinating multiple Showduino capabilities.
 
-### Option 2 — local web server
+## Architecture
 
-From the repository folder run:
+```text
+index.html
+styles.css
+src/
+  app.js          Studio shell, scene navigation and Cue Composer
+  model.js        Production / Scene / Cue / Action / Target model
+  store.js        Project persistence
+  preflight.js    Production validation
+  simulator.js    Cue and scene execution preview
+```
+
+The legacy Studio 1.x `app.js` and `touch.js` remain temporarily in the repository for comparison/migration, but Studio 2.0 does not load them.
+
+## Run
+
+Studio uses native JavaScript modules, so serve the repository through a web server rather than opening `index.html` as a local file.
 
 ```bash
 python -m http.server 8080
@@ -43,13 +65,17 @@ python -m http.server 8080
 
 Then open `http://localhost:8080`.
 
-## Files
+GitHub Pages can also serve the app directly from `main` after the Studio 2.0 branch is merged.
 
-- `index.html` — application shell
-- `styles.css` — Studio UI and responsive design
-- `app.js` — timeline, clips, transport, save/load and editing logic
-- `touch.js` — pinch zoom and mobile drag support
+## Next Studio 2.0 layers
 
-## Next product steps
-
-The editor is intentionally standalone at this stage. The next integration layer can connect saved Studio productions to Showduino's production manifest / command architecture and add real asset import, device routing, waveform previews, lighting parameter editors, automation curves and Stage Runtime export.
+- Asset Library and real audio import/waveforms
+- Device inventory and routing
+- Dedicated Lighting editor
+- Pixel FX designer
+- DMX editor
+- Automation curves
+- Trigger graph
+- Scene timeline view
+- richer simulator
+- production packaging/export for the Showduino runtime
