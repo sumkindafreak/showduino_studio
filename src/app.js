@@ -2,6 +2,8 @@ import { ACTION_TYPES, TARGETS, createAction, createCue, createProduction, creat
 import { saveProduction, loadProduction } from './store.js';
 import { runPreflight } from './preflight.js';
 import { simulateCue, simulateScene } from './simulator.js';
+import { openPixelComposer } from './pixel-composer.js';
+import { ensurePixelComposition, pixelActionSummary } from './pixels.js';
 
 const state = {
   production: createChamberDemo(),
@@ -80,10 +82,13 @@ function renderSceneWorkspace() {
 
   cue.actions.forEach((action, index) => {
     const def = ACTION_TYPES.find(item => item.type === action.type) || ACTION_TYPES[0];
+    const isPixel = action.type === 'pixel';
+    const summary = isPixel ? pixelActionSummary(action) : `${action.value || def.label}${action.delayMs ? ` · delay ${action.delayMs} ms` : ''}${action.durationMs ? ` · ${action.durationMs} ms` : ''}`;
     const card = document.createElement('article');
-    card.className = 'action-card';
-    card.innerHTML = `<div class="action-icon">${escapeHtml(def.icon)}</div><div><strong>${String(index + 1).padStart(2, '0')} · ${escapeHtml(action.label)}</strong><p>${escapeHtml(action.value || def.label)}${action.delayMs ? ` · delay ${action.delayMs} ms` : ''}${action.durationMs ? ` · ${action.durationMs} ms` : ''}</p></div><button class="action-target" title="Edit action">${escapeHtml(action.target)}</button>`;
-    card.querySelector('button').onclick = () => openActionModal(action);
+    card.className = `action-card ${isPixel ? 'pixel-action-card' : ''}`;
+    card.innerHTML = `<div class="action-icon">${escapeHtml(def.icon)}</div><div><strong>${String(index + 1).padStart(2, '0')} · ${escapeHtml(action.label)}</strong><p>${escapeHtml(summary)}</p></div><div class="action-card-buttons"><button class="action-target" data-action="edit" title="Edit action">${escapeHtml(action.target)}</button>${isPixel ? '<button class="pixel-compose-btn" data-action="pixels" title="Open Segmented Pixel Composer">▦ Compose Pixels</button>' : ''}</div>`;
+    card.querySelector('[data-action="edit"]').onclick = () => openActionModal(action);
+    card.querySelector('[data-action="pixels"]')?.addEventListener('click', () => openPixelAction(action));
     els.actionStack.appendChild(card);
   });
 }
@@ -160,7 +165,16 @@ function addAction() {
     { name: 'value', label: 'Command / asset / value', value: '' },
     { name: 'delayMs', label: 'Delay before action (ms)', type: 'number', value: 0 },
     { name: 'durationMs', label: 'Duration / fade (ms)', type: 'number', value: 0 }
-  ], values => { const action = createAction(values.type); action.label = values.label || ACTION_TYPES.find(item => item.type === values.type)?.label || values.type; action.target = values.target; action.value = values.value || ''; action.delayMs = Number(values.delayMs || 0); action.durationMs = Number(values.durationMs || 0); cue.actions.push(action); });
+  ], values => {
+    const action = createAction(values.type);
+    action.label = values.label || ACTION_TYPES.find(item => item.type === values.type)?.label || values.type;
+    action.target = values.target;
+    action.value = values.value || '';
+    action.delayMs = Number(values.delayMs || 0);
+    action.durationMs = Number(values.durationMs || 0);
+    if (action.type === 'pixel') ensurePixelComposition(action);
+    cue.actions.push(action);
+  });
 }
 
 function openActionModal(action) {
@@ -168,10 +182,32 @@ function openActionModal(action) {
     { name: 'type', label: 'Action type', type: 'select', value: action.type, options: ACTION_TYPES.map(item => item.type) },
     { name: 'label', label: 'Action name', value: action.label },
     { name: 'target', label: 'Target', type: 'select', value: action.target, options: TARGETS },
-    { name: 'value', label: 'Command / asset / value', value: action.value },
+    { name: 'value', label: 'Command / asset / value', value: action.type === 'pixel' ? pixelActionSummary(action) : action.value },
     { name: 'delayMs', label: 'Delay before action (ms)', type: 'number', value: action.delayMs },
     { name: 'durationMs', label: 'Duration / fade (ms)', type: 'number', value: action.durationMs }
-  ], values => { action.type = values.type; action.label = values.label || action.label; action.target = values.target; action.value = values.value || ''; action.delayMs = Number(values.delayMs || 0); action.durationMs = Number(values.durationMs || 0); });
+  ], values => {
+    action.type = values.type;
+    action.label = values.label || action.label;
+    action.target = values.target;
+    if (action.type !== 'pixel') action.value = values.value || '';
+    action.delayMs = Number(values.delayMs || 0);
+    action.durationMs = Number(values.durationMs || 0);
+    if (action.type === 'pixel') {
+      ensurePixelComposition(action);
+      action.value = pixelActionSummary(action);
+    }
+  });
+}
+
+function openPixelAction(action) {
+  openPixelComposer(action, {
+    modalRoot: els.modalRoot,
+    toast,
+    onSave: () => {
+      markDirty();
+      render();
+    }
+  });
 }
 
 function simulate() {
@@ -209,4 +245,4 @@ document.querySelectorAll('.section-tabs button').forEach(button => button.oncli
 state.activeSceneId = state.production.scenes[1]?.id || state.production.scenes[0]?.id || null;
 state.activeCueId = activeScene()?.cues[0]?.id || null;
 render();
-console.info('Showduino Studio 2.0 Production Foundation ready');
+console.info('Showduino Studio 2.0 Segmented Pixel Composer ready');

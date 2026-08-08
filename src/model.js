@@ -38,6 +38,15 @@ export function createAction(type = 'audio') {
   return { id: uid('action'), type: def.type, label: def.label, target: TARGETS[0], delayMs: 0, durationMs: 0, value: '', notes: '' };
 }
 
+function demoPixelLayer(name, effect, colour, overrides = {}) {
+  return {
+    id: uid('pixel-layer'), name, effect, colour, colour2: overrides.colour2 || colour,
+    brightness: overrides.brightness ?? 100, opacity: overrides.opacity ?? 100,
+    speed: overrides.speed ?? 50, density: overrides.density ?? 35,
+    direction: overrides.direction || 'forward', blend: overrides.blend || 'replace'
+  };
+}
+
 export function createChamberDemo() {
   const production = createProduction('The Chamber');
   production.description = 'Reference immersive production for Showduino Studio 2.0.';
@@ -56,10 +65,39 @@ export function createChamberDemo() {
   awakening.description = 'The chamber changes state and the entity reveals itself.';
   const cue = createCue('Entity Appears');
   cue.trigger = 'Operator GO';
+
+  const segmentedPixels = createAction('pixel');
+  segmentedPixels.label = 'Segmented corridor electricity';
+  segmentedPixels.target = 'Corridor Pixels';
+  segmentedPixels.value = 'Corridor Pixel Line · 120 px · 3 segments · 4 layers';
+  segmentedPixels.pixel = {
+    lineId: 'pixel-line-1',
+    lineName: 'Corridor Pixel Line',
+    pixelCount: 120,
+    masterBrightness: 100,
+    segments: [
+      {
+        id: uid('pixel-segment'), name: 'Electric Contacts', start: 0, end: 7, enabled: true,
+        layers: [demoPixelLayer('Electrical arc', 'lightning', '#e8fbff', { colour2: '#72bfff', speed: 82, density: 48 })]
+      },
+      {
+        id: uid('pixel-segment'), name: 'Blue Marker', start: 8, end: 10, enabled: true,
+        layers: [demoPixelLayer('Plain blue', 'solid', '#1769ff', { brightness: 75 })]
+      },
+      {
+        id: uid('pixel-segment'), name: 'Warm Chamber Glow', start: 11, end: 119, enabled: true,
+        layers: [
+          demoPixelLayer('Warm white base', 'solid', '#ffd39a', { brightness: 42 }),
+          demoPixelLayer('Subtle flame movement', 'flicker', '#fff0cf', { colour2: '#ffb15c', brightness: 28, opacity: 38, speed: 24, density: 18, blend: 'add' })
+        ]
+      }
+    ]
+  };
+
   cue.actions.push(
     { ...createAction('audio'), label: 'Entity scream', target: 'Stage Left', value: 'entity_scream.wav' },
     { ...createAction('lighting'), label: 'Chamber snap red', target: 'Chamber Lighting', value: 'Red 100%', durationMs: 300 },
-    { ...createAction('pixel'), label: 'Corridor chase outward', target: 'Corridor Pixels', value: 'Chase Outward · 80%' },
+    segmentedPixels,
     { ...createAction('relay'), label: 'Prop strike', target: 'Relay Bank A', value: 'Relay 03 ON', durationMs: 2500 },
     { ...createAction('delay'), label: 'Impact delay', target: 'Stage Controller', delayMs: 750, value: '750 ms' },
     { ...createAction('audio'), label: 'Impact hit', target: 'Main Audio', value: 'impact.wav' }
