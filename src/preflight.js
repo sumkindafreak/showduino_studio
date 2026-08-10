@@ -1,4 +1,4 @@
-const SUPPORTED_ACTIONS = new Set(['audio','lighting','pixels','dmx','relay','video','delay','automation','trigger','safety']);
+const SUPPORTED_ACTIONS = new Set(['audio','lighting','pixel','dmx','relay','video','delay','automation','trigger','safety']);
 
 export function runPreflight(production) {
   const issues = [];
