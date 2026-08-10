@@ -1,4 +1,5 @@
 import { normaliseProduction } from './model.js';
+import { packageFilename, parseHardwarePackage, serialiseHardwarePackage } from './package.js';
 
 const STORAGE_KEY = 'showduino-studio-2-production';
 
@@ -16,12 +17,22 @@ export function loadProduction() {
   catch (error) { console.error('Showduino Studio load failed:', error); return null; }
 }
 
-export function exportProduction(production) {
-  const blob = new Blob([JSON.stringify(production, null, 2)], { type: 'application/json' });
+function downloadText(text, filename) {
+  const blob = new Blob([text], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${(production.name || 'showduino-production').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.showduino.json`;
+  link.download = filename;
   link.click();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+export function exportProduction(production) {
+  downloadText(serialiseHardwarePackage(production), packageFilename(production));
+}
+
+export function importProductionDocument(value) {
+  if (value?.manifest?.schema === 'showduino.production.package') return parseHardwarePackage(value);
+  if (value && Array.isArray(value.scenes)) return normaliseProduction(value);
+  throw new Error('File is neither a Showduino package nor a Studio production.');
 }
