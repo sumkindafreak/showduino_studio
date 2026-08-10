@@ -13,6 +13,37 @@ function stable(value) {
   return value;
 }
 
+function runtimeFingerprint(production) {
+  return JSON.stringify(stable({
+    id: production.id,
+    name: production.name,
+    version: production.version,
+    description: production.description || '',
+    scenes: production.scenes.map(scene => ({
+      id: scene.id,
+      name: scene.name,
+      description: scene.description || '',
+      order: scene.order,
+      cues: scene.cues.map(cue => ({
+        id: cue.id,
+        name: cue.name,
+        trigger: cue.trigger,
+        notes: cue.notes || '',
+        actions: cue.actions.map(action => ({
+          id: action.id,
+          type: action.type,
+          label: action.label,
+          target: action.target,
+          delayMs: Number(action.delayMs || 0),
+          durationMs: Number(action.durationMs || 0),
+          value: action.value || '',
+          notes: action.notes || ''
+        }))
+      }))
+    }))
+  }));
+}
+
 export function buildHardwarePackage(input) {
   const production = normaliseProduction(structuredClone(input));
   const actions = production.scenes.flatMap(scene => scene.cues.flatMap(cue => cue.actions));
@@ -45,10 +76,21 @@ export function parseHardwarePackage(raw) {
   return normaliseProduction(value.production);
 }
 
+export function verifyPackageRoundTrip(production) {
+  const original = normaliseProduction(structuredClone(production));
+  const serialised = JSON.stringify(buildHardwarePackage(original));
+  const restored = parseHardwarePackage(serialised);
+  if (runtimeFingerprint(original) !== runtimeFingerprint(restored)) {
+    throw new Error('Showduino package round-trip changed runtime production data.');
+  }
+  return true;
+}
+
 export function packageFilename(production) {
   return `${slug(production.name)}.showduino-package.json`;
 }
 
 export function serialiseHardwarePackage(production) {
+  verifyPackageRoundTrip(production);
   return JSON.stringify(buildHardwarePackage(production), null, 2);
 }
