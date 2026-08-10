@@ -6,70 +6,43 @@
   <meta name="theme-color" content="#090b0f" />
   <title>Showduino Studio 2.0</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="landing.css" />
 </head>
 <body>
-  <div class="studio-shell">
+  <section id="studioLanding" class="studio-landing" aria-label="Showduino Studio welcome">
+    <div class="landing-inner">
+      <div class="landing-wordmark">Showduino<span>Studio</span></div>
+      <p class="landing-kicker">Production Foundation</p>
+      <h1 class="landing-title">Build the show. Run the moment.</h1>
+      <p class="landing-copy">Create fast, cue-driven productions for the Showduino ecosystem. Compose scenes, stack actions, preflight the production and prepare it for hardware.</p>
+      <div class="landing-actions">
+        <button id="landingNew" class="landing-action primary"><strong>＋ New Production</strong><span>Start a clean Showduino production</span></button>
+        <button id="landingDemo" class="landing-action"><strong>Open The Chamber</strong><span>Explore the built-in reference production</span></button>
+        <button id="landingRecent" class="landing-action landing-recent" hidden><span><strong id="landingRecentName">Recent Production</strong><span>Continue your saved work</span></span><span id="landingRecentMeta" class="landing-recent-meta"></span></button>
+      </div>
+      <p class="landing-version">Showduino Studio 2.0 · local-first authoring</p>
+    </div>
+  </section>
+
+  <div class="studio-shell" aria-hidden="true">
     <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark">S</div>
-        <div><strong>Showduino Studio</strong><span>2.0 · Production Foundation</span></div>
-      </div>
-      <div class="production-title">
-        <input id="productionName" value="The Chamber" aria-label="Production name" />
-        <span id="productionMeta">0 scenes · 0 cues</span>
-      </div>
-      <div class="top-actions">
-        <button id="newProductionBtn">New</button>
-        <button id="saveBtn">Save</button>
-        <button id="loadBtn">Load</button>
-        <button id="preflightBtn">Preflight</button>
-        <button class="primary" id="simulateBtn">▶ Simulate</button>
-      </div>
+      <div class="brand"><div class="brand-mark">S</div><div><strong>Showduino Studio</strong><span>2.0 · Production Foundation</span></div></div>
+      <div class="production-title"><input id="productionName" value="The Chamber" aria-label="Production name" /><span id="productionMeta">0 scenes · 0 cues</span></div>
+      <div class="top-actions"><button id="newProductionBtn">New</button><button id="saveBtn">Save</button><button id="loadBtn">Load</button><button id="preflightBtn">Preflight</button><button class="primary" id="simulateBtn">▶ Simulate</button></div>
     </header>
 
     <main class="studio-grid">
       <aside class="navigator panel">
         <div class="panel-title"><div><strong>Production</strong><span>Scenes & structure</span></div><button id="addSceneBtn">＋</button></div>
-        <nav class="section-tabs">
-          <button class="active" data-tab="scenes">Scenes</button>
-          <button data-tab="assets">Assets</button>
-          <button data-tab="devices">Devices</button>
-        </nav>
-        <div id="sceneList" class="scene-list"></div>
-        <div id="sidebarEmpty" class="sidebar-empty" hidden>Coming in the next Studio 2.0 layer.</div>
+        <nav class="section-tabs"><button class="active" data-tab="scenes">Scenes</button><button data-tab="assets">Assets</button><button data-tab="devices">Devices</button></nav>
+        <div id="sceneList" class="scene-list"></div><div id="sidebarEmpty" class="sidebar-empty" hidden>Coming in the next Studio 2.0 layer.</div>
       </aside>
 
       <section class="workspace">
-        <div class="workspace-header panel">
-          <div>
-            <span class="eyebrow">ACTIVE SCENE</span>
-            <h1 id="sceneTitle">No scene selected</h1>
-            <p id="sceneDescription">Create a scene to begin composing the production.</p>
-          </div>
-          <div class="scene-actions">
-            <button id="renameSceneBtn">Rename</button>
-            <button id="addCueBtn" class="primary">＋ Add Cue</button>
-          </div>
-        </div>
-
+        <div class="workspace-header panel"><div><span class="eyebrow">ACTIVE SCENE</span><h1 id="sceneTitle">No scene selected</h1><p id="sceneDescription">Create a scene to begin composing the production.</p></div><div class="scene-actions"><button id="renameSceneBtn">Rename</button><button id="addCueBtn" class="primary">＋ Add Cue</button></div></div>
         <div class="workspace-body">
-          <section class="cue-column panel">
-            <div class="panel-title"><div><strong>Cues</strong><span>Operator moments & events</span></div><span id="cueCount">0</span></div>
-            <div id="cueList" class="cue-list"></div>
-          </section>
-
-          <section class="composer panel">
-            <div class="composer-header">
-              <div>
-                <span class="eyebrow">CUE COMPOSER</span>
-                <h2 id="cueTitle">Select a cue</h2>
-                <p id="cueTrigger">Trigger: —</p>
-              </div>
-              <div class="composer-actions"><button id="editCueBtn">Edit Cue</button><button id="addActionBtn" class="primary">＋ Action</button></div>
-            </div>
-            <div id="actionStack" class="action-stack"></div>
-            <div id="composerEmpty" class="composer-empty">Choose a cue from the scene to inspect its complete Showduino action stack.</div>
-          </section>
+          <section class="cue-column panel"><div class="panel-title"><div><strong>Cues</strong><span>Operator moments & events</span></div><span id="cueCount">0</span></div><div id="cueList" class="cue-list"></div></section>
+          <section class="composer panel"><div class="composer-header"><div><span class="eyebrow">CUE COMPOSER</span><h2 id="cueTitle">Select a cue</h2><p id="cueTrigger">Trigger: —</p></div><div class="composer-actions"><button id="editCueBtn">Edit Cue</button><button id="addActionBtn" class="primary">＋ Action</button></div></div><div id="actionStack" class="action-stack"></div><div id="composerEmpty" class="composer-empty">Choose a cue from the scene to inspect its complete Showduino action stack.</div></section>
         </div>
       </section>
 
@@ -80,13 +53,10 @@
       </aside>
     </main>
 
-    <footer class="bottom-bar">
-      <span>Production → Scene → Cue → Action → Target</span>
-      <span id="saveState">Unsaved session</span>
-    </footer>
+    <footer class="bottom-bar"><span>Production → Scene → Cue → Action → Target</span><span id="saveState">Unsaved session</span></footer>
   </div>
-  <div id="modalRoot"></div>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="modalRoot"></div><div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script type="module" src="src/app.js"></script>
+  <script type="module" src="src/landing.js"></script>
 </body>
 </html>
