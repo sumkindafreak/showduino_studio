@@ -1,10 +1,11 @@
 import { normaliseProduction } from './model.js';
-import { packageFilename, parseHardwarePackage, serialiseHardwarePackage } from './package.js';
+import { importShowduinoDocument, serialiseShdo, shdoFilename } from './package.js';
 
 const STORAGE_KEY = 'showduino-studio-2-production';
 
 export function saveProduction(production) {
   const copy = structuredClone(production);
+  copy.createdAt ||= copy.metadata?.createdAt || copy.updatedAt || new Date().toISOString();
   copy.updatedAt = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
   return copy;
@@ -18,7 +19,7 @@ export function loadProduction() {
 }
 
 function downloadText(text, filename) {
-  const blob = new Blob([text], { type: 'application/json' });
+  const blob = new Blob([text], { type: 'application/vnd.showduino.production+json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -28,11 +29,9 @@ function downloadText(text, filename) {
 }
 
 export function exportProduction(production) {
-  downloadText(serialiseHardwarePackage(production), packageFilename(production));
+  downloadText(serialiseShdo(production), shdoFilename(production));
 }
 
 export function importProductionDocument(value) {
-  if (value?.manifest?.schema === 'showduino.production.package') return parseHardwarePackage(value);
-  if (value && Array.isArray(value.scenes)) return normaliseProduction(value);
-  throw new Error('File is neither a Showduino package nor a Studio production.');
+  return importShowduinoDocument(value);
 }
