@@ -59,19 +59,10 @@ function productionDurationMs(production) {
     return Math.round(Number(production.durationMs));
   }
 
-  let maximum = 0;
-  for (const scene of production.scenes || []) {
-    for (const cue of scene.cues || []) {
-      for (const action of cue.actions || []) {
-        const start = asNonNegativeInteger(action.timelineStartMs ?? action.delayMs ?? 0);
-        const duration = asNonNegativeInteger(action.timelineDurationMs ?? action.durationMs ?? 0);
-        maximum = Math.max(maximum, start + duration);
-      }
-    }
-  }
-
-  // New productions default to a five-minute authoring canvas until the user shortens it.
-  return maximum > 0 ? maximum : 300000;
+  // Scene timelines are currently scene-local and may be operator/event triggered, so their
+  // clip extents cannot be safely added or treated as the total production duration. Keep the
+  // established five-minute authoring canvas until Studio has an explicit production duration.
+  return 300000;
 }
 
 function normaliseDevice(device, index) {
