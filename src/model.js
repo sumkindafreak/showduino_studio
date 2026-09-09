@@ -233,14 +233,14 @@ export function createChamberDemo() {
 
 function normaliseDevice(device, index) {
   const safe = device && typeof device === 'object' ? device : createDevice(`Device ${index + 1}`);
-  safe.id ||= uid('device');
-  safe.name ||= `Device ${index + 1}`;
-  safe.type ||= 'custom';
+  safe.id = typeof safe.id === 'string' && safe.id.trim() ? safe.id.trim() : uid('device');
+  safe.name = typeof safe.name === 'string' && safe.name.trim() ? safe.name.trim() : `Device ${index + 1}`;
+  safe.type = typeof safe.type === 'string' && safe.type.trim() ? safe.type.trim() : 'custom';
   safe.enabled = safe.enabled !== false;
   safe.required = safe.required !== false;
   safe.binding = safe.binding && typeof safe.binding === 'object' ? safe.binding : createBinding();
-  safe.binding.route ||= 'unbound';
-  safe.binding.nodeId ||= '';
+  safe.binding.route = typeof safe.binding.route === 'string' && safe.binding.route.trim() ? safe.binding.route.trim() : 'unbound';
+  safe.binding.nodeId = typeof safe.binding.nodeId === 'string' ? safe.binding.nodeId.trim() : '';
   safe.binding.channel = Number.isFinite(Number(safe.binding.channel)) ? Math.max(0, Number(safe.binding.channel)) : 0;
   safe.binding.output = Number.isFinite(Number(safe.binding.output)) ? Math.max(0, Number(safe.binding.output)) : 0;
   safe.binding.pixelStart = Number.isFinite(Number(safe.binding.pixelStart)) ? Math.max(0, Number(safe.binding.pixelStart)) : 0;
@@ -283,10 +283,11 @@ export function normaliseProduction(production) {
         action.notes ||= '';
         action.params = action.params && typeof action.params === 'object' ? action.params : defaultParams(action.type);
 
-        // Migration: resolve old human-readable target names to a logical device ID when possible.
+        // Migration: only resolve a legacy human-readable target when exactly one device name matches.
         if (!action.targetDeviceId && action.target) {
-          const match = safe.devices.find(device => device.name.toLowerCase() === String(action.target).toLowerCase());
-          if (match) action.targetDeviceId = match.id;
+          const targetName = String(action.target).trim().toLowerCase();
+          const matches = safe.devices.filter(device => device.name.toLowerCase() === targetName);
+          if (matches.length === 1) action.targetDeviceId = matches[0].id;
         }
         if (action.targetDeviceId) {
           const device = safe.devices.find(item => item.id === action.targetDeviceId);
