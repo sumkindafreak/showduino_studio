@@ -1,11 +1,23 @@
-export {
-  compileSceneForStage,
+import {
+  compileSceneForStage as compileSceneCore,
   deploymentPlanText,
   downloadDeploymentPlan
 } from './deployment-core.js';
 
+export { deploymentPlanText, downloadDeploymentPlan };
+
 const STAGE_TIMELINE_ENDPOINT = '/api/studio-timeline';
 const STAGE_UPLOAD_CAPABILITY = 'studio-ram-timeline-upload';
+const P4_TIMELINE_MAX_CUES = 2048;
+
+export function compileSceneForStage(production, sceneId) {
+  const result = compileSceneCore(production, sceneId);
+  if (result.commands.length > P4_TIMELINE_MAX_CUES) {
+    result.errors.push(`Compiled scene contains ${result.commands.length} commands; P4 RAM timeline limit is ${P4_TIMELINE_MAX_CUES}.`);
+    result.ok = false;
+  }
+  return result;
+}
 
 function stageBaseUrl(baseUrl) {
   return String(baseUrl || '').trim().replace(/\/$/, '');
