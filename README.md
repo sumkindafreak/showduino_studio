@@ -97,7 +97,15 @@ Only Scene Start / Timeline / Automatic cues can currently become a self-contain
 
 `Deploy to Stage` uploads the compiled RAM timeline only. It does **not** send `SHOW:START`. The P4 remains runtime and safety authority.
 
-The current P4/S3 browser command whitelists must explicitly permit the validated `SHOW:TL:*` upload envelope before direct browser deployment is enabled on production hardware. Until that companion firmware change is installed, `Export Plan` provides the compiled deployment artifact without pretending the Stage accepted it.
+Direct Studio upload uses the dedicated `/api/studio-timeline` endpoint rather than widening the generic `/api/command` whitelist. The Communications S3 and P4 both validate the upload envelope, and the P4 again validates each nested Pixel or Audio Node command before accepting it.
+
+### Deployment transport boundary
+
+Plain-HTTP deployment is **commissioning/local-link functionality only**. It is intended for the isolated Showduino Communications S3 SoftAP used during setup, where the operator controls access to the Wi-Fi network. It must not be described or relied on as an authenticated production-deployment channel on a shared venue LAN, public Wi-Fi or the internet.
+
+For a production-grade remote deployment path, Showduino will require an authenticated integrity-protected transport. Until that exists, keep direct phone/browser deployment on the isolated local Showduino link; otherwise export the deployment plan and use a trusted local maintenance path.
+
+A browser page loaded over HTTPS will normally block requests to an `http://` Showduino target as mixed content. The planned phone workflow therefore serves Studio locally from the Communications S3 so authoring and deployment share the same Showduino origin.
 
 ## SHDO v2
 
@@ -177,10 +185,11 @@ python -m http.server 8080
 
 Then open `http://localhost:8080`.
 
-For direct Stage deployment, serve Studio over HTTP on the same trusted local network as the target. A browser loaded over HTTPS will normally block direct requests to an `http://` Stage as mixed content.
+For bench commissioning from another device, use the isolated Showduino local link. Do not expose the plain-HTTP deployment endpoint on an untrusted/shared network.
 
 ## Next Studio 2.0 layers
 
+- Communications-S3-hosted phone Studio
 - Asset Library and real audio import/waveforms
 - dedicated Lighting editor
 - Pixel FX designer / reusable presets
