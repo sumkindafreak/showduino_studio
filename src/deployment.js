@@ -1,5 +1,6 @@
 const TIMELINE_COMMAND_MAX = 63;
 const P4_PIXEL_SEGMENT_SLOTS = 16;
+const STAGE_UPLOAD_CAPABILITY = 'studio-ram-timeline-upload';
 
 function clamp(value, min, max) {
   const number = Number(value);
@@ -257,15 +258,40 @@ export function downloadDeploymentPlan(result) {
   window.setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
+function stageBaseUrl(baseUrl) {
+  return String(baseUrl || '').trim().replace(/\/$/, '');
+}
+
+async function readJson(response) {
+  try { return await response.json(); }
+  catch (_) { return null; }
+}
+
+export async function probeStageTimelineUpload(baseUrl = '') {
+  const base = stageBaseUrl(baseUrl);
+  const response = await fetch(`${base}/api/capabilities`, { headers: { Accept: 'application/json' } });
+  const payload = await readJson(response);
+  if (!response.ok) {
+    throw new Error(`Stage capability probe → ${payload?.error || `HTTP ${response.status}`}`);
+  }
+  const engine = Array.isArray(payload?.engine) ? payload.engine : [];
+  const capability = engine.find(item => item?.name === STAGE_UPLOAD_CAPABILITY);
+  return {
+    ready: capability?.state === 'ready',
+    state: capability?.state || 'missing',
+    capability: STAGE_UPLOAD_CAPABILITY,
+    payload
+  };
+}
+
 async function postStageCommand(baseUrl, cmd) {
-  const base = String(baseUrl || '').trim().replace(/\/$/, '');
+  const base = stageBaseUrl(baseUrl);
   const response = await fetch(`${base}/api/command`, {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify({ cmd })
   });
-  let payload = null;
-  try { payload = await response.json(); } catch (_) {}
+  const payload = await readJson(response);
   if (!response.ok || payload?.ok === false) {
     throw new Error(`${cmd} → ${payload?.error || `HTTP ${response.status}`}`);
   }
@@ -274,6 +300,12 @@ async function postStageCommand(baseUrl, cmd) {
 
 export async function deploySceneToStage(result, baseUrl = '') {
   if (!result?.ok) throw new Error('Scene compiler has blocking errors.');
+
+  const capability = await probeStageTimelineUpload(baseUrl);
+  if (!capability.ready) {
+    throw new Error(`Target P4 does not advertise ${STAGE_UPLOAD_CAPABILITY}=ready (reported ${capability.state}). Install the companion Stage firmware before direct deployment.`);
+  }
+
   const replies = [];
   for (const command of result.uploadCommands) {
     replies.push({ command, reply: await postStageCommand(baseUrl, command) });
