@@ -1,0 +1,103 @@
+import {
+  compileSceneForStage as compileSceneCore,
+  deploymentPlanText,
+  downloadDeploymentPlan
+} from './deployment-core.js';
+
+export { deploymentPlanText, downloadDeploymentPlan };
+
+const STAGE_TIMELINE_ENDPOINT = '/api/studio-timeline';
+const STAGE_UPLOAD_CAPABILITY = 'studio-ram-timeline-upload';
+const P4_TIMELINE_MAX_CUES = 2048;
+const STAGE_REQUEST_TIMEOUT_MS = 7000;
+
+export function compileSceneForStage(production, sceneId) {
+  const result = compileSceneCore(production, sceneId);
+  if (result.commands.length > P4_TIMELINE_MAX_CUES) {
+    result.errors.push(`Compiled scene contains ${result.commands.length} commands; P4 RAM timeline limit is ${P4_TIMELINE_MAX_CUES}.`);
+    result.ok = false;
+  }
+  return result;
+}
+
+function stageBaseUrl(baseUrl) {
+  const value = String(baseUrl || '').trim().replace(/\/$/, '');
+  if (!value) return '';
+  let parsed;
+  try { parsed = new URL(value); }
+  catch (_) { throw new Error('Stage URL is invalid.'); }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error('Stage URL must use http:// or https://.');
+  }
+  return value;
+}
+
+async function readJson(response) {
+  try { return await response.json(); }
+  catch (_) { return null; }
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = STAGE_REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new Error(`No response from Showduino after ${timeoutMs} ms.`);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
+export async function probeStageTimelineUpload(baseUrl = '') {
+  const base = stageBaseUrl(baseUrl);
+  const response = await fetchWithTimeout(`${base}${STAGE_TIMELINE_ENDPOINT}`, {
+    headers: { Accept: 'application/json' }
+  });
+  const payload = await readJson(response);
+  if (!response.ok) {
+    throw new Error(`Stage timeline capability probe → ${payload?.error || `HTTP ${response.status}`}`);
+  }
+
+  return {
+    ready: payload?.capability === STAGE_UPLOAD_CAPABILITY && payload?.state === 'ready',
+    state: payload?.state || 'missing',
+    capability: payload?.capability || STAGE_UPLOAD_CAPABILITY,
+    payload
+  };
+}
+
+async function postStageTimelineCommand(baseUrl, cmd) {
+  const base = stageBaseUrl(baseUrl);
+  const response = await fetchWithTimeout(`${base}${STAGE_TIMELINE_ENDPOINT}`, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cmd })
+  });
+  const payload = await readJson(response);
+  if (!response.ok || payload?.ok === false) {
+    throw new Error(`${cmd} → ${payload?.error || payload?.replies || `HTTP ${response.status}`}`);
+  }
+  return payload;
+}
+
+export async function deploySceneToStage(result, baseUrl = '') {
+  if (!result?.ok) throw new Error('Scene compiler has blocking errors.');
+
+  const capability = await probeStageTimelineUpload(baseUrl);
+  if (!capability.ready) {
+    throw new Error(`Target does not advertise ${STAGE_UPLOAD_CAPABILITY}=ready (reported ${capability.state}). Update the Communications S3 and P4 Stage firmware before direct deployment.`);
+  }
+
+  const replies = [];
+  for (const command of result.uploadCommands) {
+    replies.push({
+      command,
+      reply: await postStageTimelineCommand(baseUrl, command)
+    });
+  }
+  return replies;
+}
