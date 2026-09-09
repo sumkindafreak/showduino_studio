@@ -1,4 +1,4 @@
-import { deviceSupportsAction } from './model.js';
+import { BINDING_ROUTES, deviceSupportsAction } from './model.js';
 
 const SUPPORTED_ACTIONS = new Set([
   'audio', 'lighting', 'pixel', 'mosfet', 'video', 'delay', 'automation', 'trigger', 'safety',
@@ -7,6 +7,7 @@ const SUPPORTED_ACTIONS = new Set([
 ]);
 
 const ACTIONS_WITHOUT_DEVICE = new Set(['delay', 'automation', 'safety']);
+const VALID_BINDING_ROUTES = new Set(BINDING_ROUTES.map(item => item.route));
 
 export function runPreflight(production) {
   const issues = [];
@@ -32,6 +33,9 @@ export function runPreflight(production) {
     if (device?.id) deviceById.set(device.id, device);
 
     const route = device?.binding?.route || 'unbound';
+    if (!VALID_BINDING_ROUTES.has(route)) {
+      issues.push({ level: 'error', text: `${device.name} uses unknown runtime binding route ${route}.` });
+    }
     if (device?.required !== false && route === 'unbound') {
       issues.push({ level: 'warn', text: `${device.name} is required but has no physical/runtime binding yet.` });
     }
