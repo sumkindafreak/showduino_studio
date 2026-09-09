@@ -105,8 +105,12 @@ function findTargetDeviceId(devices, action) {
   if (action.targetDeviceId) return String(action.targetDeviceId);
   const target = String(action.target || '').trim().toLowerCase();
   if (!target) return null;
-  const match = devices.find(device => [device.id, device.name].some(value => String(value).trim().toLowerCase() === target));
-  return match?.id || null;
+
+  const idMatch = devices.find(device => String(device.id || '').trim().toLowerCase() === target);
+  if (idMatch) return idMatch.id;
+
+  const nameMatches = devices.filter(device => String(device.name || '').trim().toLowerCase() === target);
+  return nameMatches.length === 1 ? nameMatches[0].id : null;
 }
 
 function trackKey(action, targetDeviceId) {
